@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Celular em pé: tela estreita e alta o bastante para a prévia ficar fixa no topo. */
+@custom-variant phone-tall (@media (max-width: 1023px) and (min-height: 640px));
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Interface sempre clara: o foco é a arte, que será impressa em fundo branco. */
+:root {
+  color-scheme: light;
+}
+
+body {
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: var(--font-sans);
+}
+
+dialog:not([open]) {
+  display: none;
+}
