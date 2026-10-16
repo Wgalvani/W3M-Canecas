@@ -1,42 +1,124 @@
+import { logout } from "@/lib/auth/actions";
 import { formatPresetSize } from "@/lib/measurements";
 import type { ProductPreset } from "@/types/image";
 
 export function MugLogo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="8" fill="#2563eb" />
-      <path d="M8 10h13v10a4 4 0 0 1-4 4h-5a4 4 0 0 1-4-4V10Z" fill="#fff" />
-      <path d="M21 13h1.5a3 3 0 0 1 0 6H21" fill="none" stroke="#fff" strokeWidth="2" />
-      <path d="M11 14h7M11 17h5" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" />
+      <rect width="32" height="32" rx="8" fill="#16181d" />
+      <path d="M8 10h13v10a4 4 0 0 1-4 4h-5a4 4 0 0 1-4-4V10Z" fill="#f3f1eb" />
+      <path d="M21 13h1.5a3 3 0 0 1 0 6H21" fill="none" stroke="#f3f1eb" strokeWidth="2" />
+      {/* Marca de registro: o "selo" de pré-impressão da marca. */}
+      <circle cx="14.5" cy="16.5" r="3" fill="none" stroke="#ff5a1f" strokeWidth="1.4" />
+      <path d="M14.5 12v9M10 16.5h9" stroke="#ff5a1f" strokeWidth="1.4" />
     </svg>
   );
 }
 
-export function Header({ preset, onHelp }: { preset: ProductPreset; onHelp: () => void }) {
+/** Marca de registro (alvo de impressão) usada como ornamento. */
+export function RegMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden>
+      <circle cx="12" cy="12" r="6" />
+      <path d="M12 1v22M1 12h22" />
+    </svg>
+  );
+}
+
+export type Step = 1 | 2 | 3;
+
+const STEPS: { step: Step; label: string }[] = [
+  { step: 1, label: "Imagem" },
+  { step: 2, label: "Enquadrar" },
+  { step: 3, label: "Exportar" },
+];
+
+function Stepper({ current }: { current: Step }) {
+  return (
+    <ol className="flex items-center gap-1.5" aria-label="Etapas">
+      {STEPS.map(({ step, label }, index) => {
+        const state = step < current ? "done" : step === current ? "current" : "todo";
+        return (
+          <li key={step} className="flex items-center gap-1.5" aria-current={state === "current" ? "step" : undefined}>
+            {index > 0 && (
+              <span aria-hidden className={`h-px w-6 transition-colors xl:w-10 ${step <= current ? "bg-ink" : "bg-line"}`} />
+            )}
+            <span
+              className={`flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-[13px] font-medium transition-colors ${
+                state === "current" ? "bg-ink text-paper" : state === "done" ? "text-ink" : "text-muted"
+              }`}
+            >
+              <span
+                aria-hidden
+                className={`grid size-5 place-items-center rounded-full font-mono text-[11px] ${
+                  state === "current"
+                    ? "bg-signal text-white"
+                    : state === "done"
+                      ? "bg-ink text-paper"
+                      : "border border-line text-muted"
+                }`}
+              >
+                {state === "done" ? "✓" : step}
+              </span>
+              {label}
+              {state === "done" && <span className="sr-only"> (concluída)</span>}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+export function Header({ preset, step, onHelp }: { preset: ProductPreset; step: Step; onHelp: () => void }) {
   // No celular o cabeçalho rola junto: o espaço fixo da tela fica para a prévia (em pé) e para a arte (deitado).
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur max-lg:static">
-      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-        <MugLogo className="size-9 shrink-0" />
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold leading-tight sm:text-lg">
-            <span className="sm:hidden">Preparador</span>
-            <span className="max-sm:hidden">Preparador de Canecas</span>
-          </h1>
-          <p className="truncate text-xs text-slate-500 sm:text-sm">
-            Arte para sublimação • {formatPresetSize(preset)}
-          </p>
+    <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md max-lg:static">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <MugLogo className="size-9 shrink-0" />
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-[17px] font-semibold leading-tight tracking-tight">
+              W3M <span className="font-medium text-muted">Canecas</span>
+            </h1>
+            <p className="truncate font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
+              <span className="max-sm:hidden">Estúdio de sublimação · </span>
+              {formatPresetSize(preset)}
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onHelp}
-          className="flex h-10 items-center gap-1.5 rounded-full border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
-        >
-          <span aria-hidden className="grid size-5 place-items-center rounded-full bg-slate-200 text-xs font-bold">
-            ?
-          </span>
-          Ajuda
-        </button>
+
+        <nav className="hidden lg:block">
+          <Stepper current={step} />
+        </nav>
+
+        <div className="flex flex-1 items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onHelp}
+            className="group flex h-10 items-center gap-2 rounded-full border border-line bg-card px-3.5 text-sm font-medium text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            <span
+              aria-hidden
+              className="grid size-5 place-items-center rounded-full bg-paper-deep font-mono text-[11px] font-semibold transition group-hover:bg-ink group-hover:text-paper"
+            >
+              ?
+            </span>
+            Ajuda
+          </button>
+          <form action={logout}>
+            <button
+              type="submit"
+              title="Sair (Administrador)"
+              className="flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-muted transition hover:bg-paper-deep hover:text-ink"
+            >
+              <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 16l-4-4 4-4M6 12h10" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="max-sm:sr-only">Sair</span>
+            </button>
+          </form>
+        </div>
       </div>
     </header>
   );

@@ -56,7 +56,7 @@ export function SizeControl({ preset, onChange }: { preset: ProductPreset; onCha
     const error = errorOf(draft[side]);
     return (
       <div className="min-w-0 flex-1">
-        <label htmlFor={`${id}-${side}`} className="text-xs text-slate-500">
+        <label htmlFor={`${id}-${side}`} className="font-mono text-[11px] uppercase tracking-wider text-muted">
           {label}
         </label>
         <div className="relative mt-0.5">
@@ -70,9 +70,9 @@ export function SizeControl({ preset, onChange }: { preset: ProductPreset; onCha
             onBlur={() => restore(side)}
             aria-invalid={!!error}
             aria-describedby={error ? `${id}-${side}-error` : undefined}
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-3 pr-9 tabular-nums outline-blue-600 aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50"
+            className="h-11 w-full rounded-xl border border-line bg-card pl-3 pr-9 font-mono text-[15px] tabular-nums transition outline-none hover:border-ink-soft/40 focus:border-ink focus:ring-4 focus:ring-ink/8 aria-[invalid=true]:border-red-400 aria-[invalid=true]:bg-red-50"
           />
-          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center text-sm text-slate-400">
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 grid place-items-center font-mono text-xs text-muted">
             cm
           </span>
         </div>
@@ -87,7 +87,7 @@ export function SizeControl({ preset, onChange }: { preset: ProductPreset; onCha
 
   return (
     <fieldset>
-      <legend className="mb-1.5 text-sm font-medium text-slate-700">Tamanho da arte</legend>
+      <legend className="mb-2 text-[13px] font-medium text-ink-soft">Tamanho da arte</legend>
 
       <label htmlFor={`${id}-preset`} className="sr-only">
         Modelo
@@ -99,7 +99,7 @@ export function SizeControl({ preset, onChange }: { preset: ProductPreset; onCha
           const chosen = PRESETS.find((option) => option.id === event.target.value);
           if (chosen) onChange(chosen);
         }}
-        className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-blue-600"
+        className="h-11 w-full cursor-pointer rounded-xl border border-line bg-card px-3 text-sm text-ink transition outline-none hover:border-ink-soft/40 focus:border-ink focus:ring-4 focus:ring-ink/8"
       >
         {PRESETS.map((option) => (
           <option key={option.id} value={option.id}>
@@ -111,27 +111,27 @@ export function SizeControl({ preset, onChange }: { preset: ProductPreset; onCha
           Personalizado{isCustom ? ` · ${formatPresetSize(preset)}` : " (digite abaixo)"}
         </option>
       </select>
-      {preset.hint && <p className="mt-1 text-xs text-slate-500">{preset.hint}</p>}
+      {preset.hint && <p className="mt-1.5 text-xs text-muted">{preset.hint}</p>}
       {preset.warning && (
-        <p role="note" className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 ring-1 ring-amber-200">
+        <p role="note" className="mt-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs text-amber-900 ring-1 ring-amber-300">
           {preset.warning}
         </p>
       )}
 
-      <div className="mt-2 flex items-start gap-2">
+      <div className="mt-3 flex items-start gap-2">
         {field("width", "Largura")}
         <button
           type="button"
           onClick={() => onChange(presetForSize(preset.heightMm, preset.widthMm))}
           aria-label="Inverter largura e altura"
           title="Inverter largura e altura"
-          className="mt-5 grid size-11 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"
+          className="mt-[22px] grid size-11 shrink-0 place-items-center rounded-full border border-line bg-card text-ink-soft transition hover:rotate-180 hover:border-ink hover:text-ink duration-500 ease-out-expo"
         >
           <span aria-hidden>⇄</span>
         </button>
         {field("height", "Altura")}
       </div>
-      <p className="mt-1 text-xs text-slate-500">Cada lado de {limitsLabel}.</p>
+      <p className="mt-1.5 text-xs text-muted">Cada lado de {limitsLabel}.</p>
     </fieldset>
   );
 }

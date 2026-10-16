@@ -3,6 +3,7 @@ import { testRulerSpanCm } from "@/lib/testPattern";
 import type { ProductPreset } from "@/types/image";
 import { Modal } from "./Modal";
 import { PrintNotice } from "./PrintNotice";
+import { btn } from "./ui";
 
 export function HelpDialog({
   open,
@@ -19,8 +20,8 @@ export function HelpDialog({
   const [spanFrom, spanTo] = testRulerSpanCm(preset);
   return (
     <Modal open={open} onClose={onClose} title="Como usar">
-      <div className="space-y-4 text-sm text-slate-700">
-        <ol className="list-decimal space-y-2 pl-5">
+      <div className="space-y-5 text-sm leading-relaxed text-ink-soft">
+        <ol className="space-y-3 [counter-reset:step] [&>li]:relative [&>li]:pl-9 [&>li]:[counter-increment:step] [&>li]:before:absolute [&>li]:before:left-0 [&>li]:before:top-0 [&>li]:before:grid [&>li]:before:size-6 [&>li]:before:place-items-center [&>li]:before:rounded-full [&>li]:before:bg-ink [&>li]:before:font-mono [&>li]:before:text-[11px] [&>li]:before:text-paper [&>li]:before:content-[counter(step)] [&_strong]:font-semibold [&_strong]:text-ink">
           <li>
             <strong>Selecione ou arraste</strong> uma imagem JPG, PNG ou WEBP.
           </li>
@@ -50,12 +51,12 @@ export function HelpDialog({
         </p>
 
         <p>
-          A linha tracejada azul é a <strong>área segura</strong> ({preset.safeMarginMm} mm). Ela aparece só no editor e
+          A linha tracejada ciano é a <strong>área segura</strong> ({preset.safeMarginMm} mm). Ela aparece só no editor e
           não é impressa. Evite textos e rostos fora dela.
         </p>
 
-        <div className="rounded-xl bg-slate-50 p-3">
-          <p className="font-medium">Teste de impressão</p>
+        <div className="rounded-2xl border border-line bg-paper p-4">
+          <p className="font-display text-base font-semibold text-ink">Teste de impressão</p>
           <p className="mt-1">
             Gere a arte de teste ({size}), imprima em escala 100% e meça com régua entre as marcas de {spanFrom} cm e{" "}
             {spanTo} cm: deve dar {spanTo - spanFrom} cm. No arquivo, o texto “TESTE 123 ABC →” deve aparecer invertido.
@@ -66,13 +67,13 @@ export function HelpDialog({
               onClose();
               onTestPattern();
             }}
-            className="mt-2 h-10 rounded-full border border-slate-300 bg-white px-4 font-medium hover:bg-slate-100"
+            className={`mt-3 h-10 px-4 ${btn.secondary}`}
           >
             Carregar arte de teste
           </button>
         </div>
 
-        <p className="text-slate-500">
+        <p className="flex items-center gap-2 text-muted">
           Suas imagens são processadas localmente, no seu navegador, e não são enviadas nem armazenadas.
         </p>
       </div>

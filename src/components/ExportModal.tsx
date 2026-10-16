@@ -9,6 +9,7 @@ import type { ExportKind, Framing, LoadedImage, ProductPreset } from "@/types/im
 import { Modal } from "./Modal";
 import { PrintNotice } from "./PrintNotice";
 import { SegmentedControl } from "./SegmentedControl";
+import { btn } from "./ui";
 
 const formatMm = (mm: number) => mm.toLocaleString("pt-BR");
 
@@ -57,7 +58,7 @@ export function ExportModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-12 flex-1 rounded-full border border-slate-200 font-medium text-slate-700 hover:bg-slate-50"
+            className={`h-12 flex-1 ${btn.secondary}`}
           >
             Cancelar
           </button>
@@ -65,14 +66,15 @@ export function ExportModal({
             type="button"
             disabled={busy}
             onClick={() => onExport(kind, Number(a4Count))}
-            className="h-12 flex-[2] rounded-full bg-blue-600 font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+            className={`h-12 flex-[2] ${btn.primary}`}
           >
             {busy ? "Gerando…" : kind === "png" ? "Baixar PNG" : "Baixar PDF"}
+            {!busy && <span aria-hidden className="text-signal">↓</span>}
           </button>
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
         <SegmentedControl<ExportKind>
           label="Formato"
           value={kind}
@@ -85,7 +87,7 @@ export function ExportModal({
         />
 
         {counts.length === 0 && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted">
             PDF A4 indisponível: {sizeLabel} não cabe na folha com as marcas de corte.
           </p>
         )}
@@ -115,7 +117,7 @@ export function ExportModal({
           />
         )}
 
-        <p className="text-sm text-slate-500">
+        <p className="text-sm leading-relaxed text-muted">
           {kind === "png" &&
             `Arte de ${pixels.width} × ${pixels.height} px (${sizeLabel} a ${preset.ppi} PPI) com marcas de corte; imagem total de ${pixels.width + 2 * margin} × ${pixels.height + 2 * margin} px.`}
           {kind === "pdf-single" && `Arte de ${sizeLabel} com marcas de corte, em página de ${sheetLabel}.`}
@@ -126,7 +128,7 @@ export function ExportModal({
             <>
               A4 em pé com 3 artes de {sizeLabel}, separadas por {formatMm(A4_BORDERLESS.gapMm)} mm. Corte sobre as
               linhas-guia.{" "}
-              <strong className="font-semibold text-slate-700">
+              <strong className="font-semibold text-ink">
                 Ative a impressão sem margem (borderless) na impressora
               </strong>
               ; sem ela, a impressora corta as laterais da arte.
@@ -171,14 +173,14 @@ function OutputPreview({
 
   const caption = mirror ? "arquivo final (espelhado)" : "arquivo final (sem espelhamento)";
   return (
-    <figure className="flex flex-col items-center">
+    <figure className="pasteboard flex flex-col items-center rounded-2xl border border-line px-4 py-6">
       <canvas
         ref={canvasRef}
         role="img"
         aria-label={`Prévia do ${caption}, com marcas de corte`}
-        className={`rounded-sm shadow-[0_0_0_1px_rgb(203_213_225),0_4px_12px_-6px_rgb(15_23_42/0.3)] ${isA4 ? (portrait ? "w-52" : "w-72") : "h-auto max-h-[45vh] w-auto max-w-full"}`}
+        className={`rounded-[2px] bg-white shadow-[0_0_0_1px_rgb(22_24_29/0.12),0_18px_30px_-16px_rgb(22_24_29/0.45)] ${isA4 ? (portrait ? "w-52" : "w-72") : "h-auto max-h-[45vh] w-auto max-w-full"}`}
       />
-      <figcaption className="mt-1.5 text-center text-xs text-slate-500">
+      <figcaption className="mt-3 text-center font-mono text-[11px] uppercase tracking-wider text-muted">
         {isA4 ? `Folha A4 ${portrait ? "em pé" : "paisagem"} · ` : "Prévia do "}
         {caption}
       </figcaption>

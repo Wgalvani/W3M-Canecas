@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# senha local de desenvolvimento (auth)
+/.data/
+!.env.example

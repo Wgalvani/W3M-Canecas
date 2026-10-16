@@ -3,13 +3,15 @@
 Aplicação web para preparar artes de **21 × 9,5 cm** para sublimação em canecas:
 carregar imagem → conferir qualidade → enquadrar → espelhar → gerar PNG/PDF → imprimir.
 
-Todo o processamento acontece **no navegador**. Não há servidor de imagens, banco de dados nem login.
+Todo o processamento de imagem acontece **no navegador**: nenhuma imagem é enviada ao servidor.
+O acesso exige **login** (usuário Administrador). Configuração e revisão de segurança em [SEGURANCA.md](SEGURANCA.md).
 
 ## Rodando localmente
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run hash-password   # gera o hash da senha → cole em ADMIN_PASSWORD_HASH no .env.local
+npm run dev             # http://localhost:3001
 ```
 
 | Script              | O que faz                                      |
@@ -19,12 +21,14 @@ npm run dev        # http://localhost:3000
 | `npm test`          | Testes de medidas, qualidade, enquadramento e PDF |
 | `npm run typecheck` | Checagem de tipos                              |
 | `npm run lint`      | ESLint                                         |
+| `npm run hash-password` | Gera o hash da senha do Administrador      |
 
 ## Deploy na Vercel
 
 1. Suba o repositório no GitHub.
 2. Na Vercel: **Add New → Project**, importe o repositório (framework detectado: Next.js).
-3. Nenhuma variável de ambiente é necessária. Cada push na branch principal publica uma nova versão.
+3. Cadastre as variáveis de ambiente descritas em [SEGURANCA.md](SEGURANCA.md) (`AUTH_SECRET`, `ADMIN_PASSWORD_HASH`,
+   `ADMIN_EMAIL` e, para a redefinição por e-mail, Resend + Edge Config). Cada push na branch principal publica uma nova versão.
 
 ## Como funciona
 

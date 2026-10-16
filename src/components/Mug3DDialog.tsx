@@ -25,7 +25,7 @@ export function Mug3DDialog({ open, onClose, image, preset, framing }: Mug3DDial
   return (
     <Modal open={open} onClose={onClose} title="Ver em 3D">
       {open && <MugViewer image={image} preset={preset} framing={framing} />}
-      <p className="mt-3 text-sm text-slate-500">
+      <p className="mt-4 text-sm leading-relaxed text-muted">
         Arraste para girar · pinça ou roda do mouse para aproximar. A arte aparece como ficará na caneca (sem o
         espelhamento do arquivo).
         {!preset.object && " Formato do objeto aproximado, estimado pelo tamanho da arte."}
@@ -71,16 +71,16 @@ function MugViewer({ image, preset, framing }: Omit<Mug3DDialogProps, "open" | "
   }, [image, preset, framing]);
 
   return (
-    <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-b from-slate-50 to-slate-200">
+    <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-line bg-[radial-gradient(120%_90%_at_50%_15%,#fffefa_0%,#e9e6dd_70%,#dcd8cd_100%)]">
       <div ref={containerRef} className="absolute inset-0 touch-none" aria-label="Caneca em 3D com a sua arte" role="img" />
       {status === "loading" && (
         <div className="absolute inset-0 grid place-items-center" role="status">
-          <span aria-hidden className="size-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600" />
+          <span aria-hidden className="size-8 animate-spin rounded-full border-[3px] border-line border-t-signal" />
           <span className="sr-only">Carregando visualização 3D…</span>
         </div>
       )}
       {status === "error" && (
-        <p role="alert" className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-slate-600">
+        <p role="alert" className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-ink-soft">
           Não foi possível abrir a visualização 3D neste navegador. A arte e os arquivos não são afetados.
         </p>
       )}

@@ -152,6 +152,12 @@ export function MugEditor({ image, preset, framing, onFramingChange, mirroredVie
   const marginY = (preset.safeMarginMm / preset.heightMm) * 100;
 
   return (
+    // Artes em retrato limitadas pela altura da tela; as de paisagem ocupam toda a largura.
+    <div
+      className="mx-auto"
+      style={{ width: `min(100%, calc(var(--editor-max-height, 65dvh) * ${preset.widthMm / preset.heightMm}))` }}
+    >
+    <Ruler widthMm={preset.widthMm} />
     <div
       ref={containerRef}
       tabIndex={0}
@@ -163,14 +169,10 @@ export function MugEditor({ image, preset, framing, onFramingChange, mirroredVie
       onPointerUp={handlePointerEnd}
       onPointerCancel={handlePointerEnd}
       onKeyDown={handleKeyDown}
-      className={`relative mx-auto touch-none select-none overflow-hidden rounded-lg bg-white shadow-[0_0_0_1px_rgb(203_213_225),0_8px_24px_-12px_rgb(15_23_42/0.35)] outline-offset-4 focus-visible:outline-2 focus-visible:outline-blue-600 ${
+      className={`relative w-full touch-none select-none overflow-hidden rounded-[3px] bg-white shadow-[0_0_0_1px_rgb(22_24_29/0.1),0_24px_40px_-20px_rgb(22_24_29/0.45)] outline-offset-4 focus-visible:outline-2 focus-visible:outline-signal-ink ${
         dragging ? "cursor-grabbing" : "cursor-grab"
       }`}
-      // Artes em retrato limitadas pela altura da tela; as de paisagem ocupam toda a largura.
-      style={{
-        aspectRatio: `${preset.widthMm} / ${preset.heightMm}`,
-        width: `min(100%, calc(var(--editor-max-height, 65dvh) * ${preset.widthMm / preset.heightMm}))`,
-      }}
+      style={{ aspectRatio: `${preset.widthMm} / ${preset.heightMm}` }}
     >
       <canvas ref={canvasRef} className="absolute inset-0 size-full" />
 
@@ -178,7 +180,7 @@ export function MugEditor({ image, preset, framing, onFramingChange, mirroredVie
       {showSafeArea && (
         <div
           aria-hidden
-          className="pointer-events-none absolute border border-dashed border-sky-500/80"
+          className="pointer-events-none absolute border border-dashed border-process/90"
           style={{ left: `${marginX}%`, right: `${marginX}%`, top: `${marginY}%`, bottom: `${marginY}%` }}
         />
       )}
@@ -189,11 +191,37 @@ export function MugEditor({ image, preset, framing, onFramingChange, mirroredVie
           hintVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <span className="rounded-full bg-slate-900/70 px-2.5 py-0.5 text-[11px] font-medium text-white sm:px-3 sm:py-1 sm:text-xs">
+        <span className="rounded-full bg-ink/80 px-2.5 py-0.5 text-[11px] font-medium text-paper backdrop-blur sm:px-3 sm:py-1 sm:text-xs">
           <span className="pointer-coarse:hidden">Arraste para posicionar · Ctrl + roda para zoom</span>
           <span className="pointer-fine:hidden">Arraste · pinça para zoom</span>
         </span>
       </div>
+    </div>
+    </div>
+  );
+}
+
+/** Régua em cm sobre a arte: cada traço está na posição física real (mm relativos à largura). */
+function Ruler({ widthMm }: { widthMm: number }) {
+  const cm = Math.floor(widthMm / 10);
+  const labelEvery = widthMm > 220 ? 5 : widthMm > 120 ? 2 : 1;
+  const halfCm = `${(5 / widthMm) * 100}%`;
+  return (
+    <div aria-hidden className="relative mb-1.5 h-4 select-none font-mono text-[9px] leading-none text-muted max-sm:hidden">
+      <div
+        className="absolute inset-x-0 bottom-0 h-1"
+        style={{
+          backgroundImage: "linear-gradient(to right, rgb(22 24 29 / 0.28) 1px, transparent 1px)",
+          backgroundSize: `${halfCm} 100%`,
+        }}
+      />
+      {Array.from({ length: cm + 1 }, (_, i) => (
+        <span key={i} className="absolute bottom-0 h-2 w-px bg-ink/45" style={{ left: `${((i * 10) / widthMm) * 100}%` }}>
+          {i > 0 && i * 10 < widthMm && i % labelEvery === 0 && (
+            <span className="absolute bottom-2.5 left-0 -translate-x-1/2">{i}</span>
+          )}
+        </span>
+      ))}
     </div>
   );
 }

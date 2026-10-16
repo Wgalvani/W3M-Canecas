@@ -30,27 +30,27 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
       onClick={(event) => {
         if (event.target === ref.current) onClose();
       }}
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-white p-0 text-slate-900 shadow-xl backdrop:bg-slate-900/50 max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none"
+      className="m-auto w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-[22px] border border-line bg-card p-0 text-ink shadow-[0_40px_80px_-30px_rgb(22_24_29/0.5)] max-sm:mb-0 max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none"
     >
       <div className="flex max-h-[90dvh] flex-col">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 id={titleId} className="text-lg font-semibold">
+        <div className="flex items-center justify-between border-b border-line-soft px-6 py-4">
+          <h2 id={titleId} className="font-display text-xl font-semibold tracking-tight">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="-mr-2 grid size-10 place-items-center rounded-full text-slate-500 hover:bg-slate-100"
+            className="-mr-2 grid size-10 place-items-center rounded-full text-muted transition hover:rotate-90 hover:bg-paper-deep hover:text-ink"
           >
             <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto px-5 py-4">{children}</div>
+        <div className="overflow-y-auto px-6 py-5">{children}</div>
         {footer && (
-          <div className="flex gap-3 border-t border-slate-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="flex gap-3 border-t border-line-soft bg-paper/60 px-6 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
             {footer}
           </div>
         )}

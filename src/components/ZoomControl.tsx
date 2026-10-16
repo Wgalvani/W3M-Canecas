@@ -1,19 +1,20 @@
 import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP } from "@/lib/constants";
 
 const stepButton =
-  "grid size-11 shrink-0 place-items-center rounded-full border border-slate-200 text-xl text-slate-700 hover:bg-slate-50 disabled:opacity-40";
+  "grid size-10 shrink-0 place-items-center rounded-full border border-line bg-card text-lg text-ink-soft transition hover:border-ink hover:text-ink disabled:pointer-events-none disabled:opacity-35";
 
 export function ZoomControl({ zoom, onChange }: { zoom: number; onChange: (zoom: number) => void }) {
   const percent = Math.round(zoom * 100);
+  const fill = ((zoom - ZOOM_MIN) / (ZOOM_MAX - ZOOM_MIN)) * 100;
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between">
-        <label htmlFor="zoom" className="text-sm font-medium text-slate-700">
+      <div className="mb-2 flex items-center justify-between">
+        <label htmlFor="zoom" className="text-[13px] font-medium text-ink-soft">
           Zoom
         </label>
-        <span className="text-sm tabular-nums text-slate-500">{percent}%</span>
+        <span className="rounded-md bg-paper-deep px-1.5 py-0.5 font-mono text-xs tabular-nums text-ink">{percent}%</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <button type="button" className={stepButton} onClick={() => onChange(zoom - ZOOM_STEP)} disabled={zoom <= ZOOM_MIN} aria-label="Diminuir zoom">
           −
         </button>
@@ -26,7 +27,8 @@ export function ZoomControl({ zoom, onChange }: { zoom: number; onChange: (zoom:
           value={zoom}
           onChange={(event) => onChange(Number(event.target.value))}
           aria-valuetext={`${percent}%`}
-          className="h-11 w-full cursor-pointer accent-blue-600"
+          className="range h-10 w-full cursor-pointer"
+          style={{ "--fill": `${fill}%` } as React.CSSProperties}
         />
         <button type="button" className={stepButton} onClick={() => onChange(zoom + ZOOM_STEP)} disabled={zoom >= ZOOM_MAX} aria-label="Aumentar zoom">
           +

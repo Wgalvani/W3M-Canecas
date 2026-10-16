@@ -4,7 +4,52 @@
 @custom-variant phone-tall (@media (max-width: 1023px) and (min-height: 640px));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-plex-sans), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+}
+
+/*
+ * Identidade "estúdio de pré-impressão": papel, tinta grafite e um laranja de sinal.
+ * O ciano de processo fica reservado às guias (área segura, réguas), como na gráfica.
+ */
+@theme {
+  --color-paper: #f3f1eb;
+  --color-paper-deep: #e9e6dd;
+  --color-card: #fffefa;
+  --color-ink: #16181d;
+  --color-ink-soft: #3a3e47;
+  --color-muted: #6a6e77;
+  --color-line: #dcd8cd;
+  --color-line-soft: #e8e5dc;
+  --color-signal: #ff5a1f;
+  --color-signal-ink: #b5360b;
+  --color-signal-wash: #fff0e8;
+  --color-process: #0089c2;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-rise: rise 0.7s var(--ease-out-expo) both;
+  --animate-fade: fade 0.4s ease-out both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Interface sempre clara: o foco é a arte, que será impressa em fundo branco. */
@@ -13,11 +58,91 @@
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background-color: var(--color-paper);
+  /* Grão de papel bem sutil, só para tirar a chapa digital do fundo. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.09 0 0 0 0 0.1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+::selection {
+  background: var(--color-signal);
+  color: #fff;
+}
+
+:focus-visible {
+  outline-color: var(--color-signal-ink);
 }
 
 dialog:not([open]) {
   display: none;
+}
+
+dialog[open] {
+  animation: rise 0.45s var(--ease-out-expo) both;
+}
+
+dialog::backdrop {
+  background: rgb(22 24 29 / 0.55);
+  backdrop-filter: blur(3px);
+}
+
+/* Mesa de trabalho: pontilhado de prancheta atrás da arte. */
+.pasteboard {
+  background-color: var(--color-paper-deep);
+  background-image: radial-gradient(rgb(22 24 29 / 0.13) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+}
+
+/* Controle deslizante com a cara da marca (o nativo some nos navegadores modernos). */
+.range {
+  appearance: none;
+  background: transparent;
+  --fill: 0%;
+}
+.range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--color-ink) var(--fill), var(--color-line) var(--fill));
+}
+.range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-line);
+}
+.range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-ink);
+}
+.range::-webkit-slider-thumb {
+  appearance: none;
+  margin-top: -8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--color-card);
+  border: 2px solid var(--color-ink);
+  box-shadow: 0 2px 6px -1px rgb(22 24 29 / 0.3);
+  transition: transform 0.15s;
+}
+.range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--color-card);
+  border: 2px solid var(--color-ink);
+}
+.range:active::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  dialog[open] {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
