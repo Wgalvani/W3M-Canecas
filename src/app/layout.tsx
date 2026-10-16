@@ -22,9 +22,9 @@ const bricolage = Bricolage_Grotesque({
 });
 
 export const metadata: Metadata = {
-  title: "W3M Canecas · Estúdio de Arte",
+  title: "W3M Studio · Estúdio de Arte",
   description: "Prepare artes para sublimação em canecas (21 × 9,5 cm ou no tamanho que você escolher): enquadre, espelhe e gere PNG ou PDF prontos para impressão.",
-  applicationName: "W3M Canecas",
+  applicationName: "W3M Studio",
   robots: { index: false, follow: false },
 };
 

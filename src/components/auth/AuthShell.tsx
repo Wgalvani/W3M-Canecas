@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { MugLogo, RegMark } from "../Header";
+import { BrandMark, BrandWordmark } from "../Brand";
+import { RegMark } from "../Header";
 
 /** Moldura das telas de acesso: painel da marca à esquerda, formulário à direita. */
 export function AuthShell({ eyebrow, title, description, children }: { eyebrow: string; title: string; description?: ReactNode; children: ReactNode }) {
@@ -12,10 +13,8 @@ export function AuthShell({ eyebrow, title, description, children }: { eyebrow: 
         <RegMark className="absolute right-[136px] top-1/2 size-16 -translate-y-1/2 text-signal" />
 
         <div className="relative flex items-center gap-3">
-          <MugLogo className="size-10 rounded-lg ring-1 ring-paper/20" />
-          <span className="font-display text-lg font-semibold">
-            W3M <span className="font-medium text-paper/60">Canecas</span>
-          </span>
+          <BrandMark className="size-10 rounded-[11px] ring-1 ring-paper/20" />
+          <BrandWordmark className="text-lg" secondary="text-paper/60" />
         </div>
         <div className="relative mt-auto max-w-md">
           <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-signal">Estúdio de sublimação</p>
@@ -31,10 +30,8 @@ export function AuthShell({ eyebrow, title, description, children }: { eyebrow: 
       <main className="flex flex-col justify-center px-5 py-10 sm:px-12">
         <div className="mx-auto w-full max-w-sm animate-rise">
           <div className="mb-10 flex items-center gap-3 lg:hidden">
-            <MugLogo className="size-9" />
-            <span className="font-display text-lg font-semibold">
-              W3M <span className="font-medium text-muted">Canecas</span>
-            </span>
+            <BrandMark className="size-9" />
+            <BrandWordmark className="text-lg" />
           </div>
           <p className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-signal-ink">{eyebrow}</p>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-[-0.03em]">{title}</h1>

@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { ResetForm } from "@/components/auth/forms";
 import { isResetTokenValid } from "@/lib/auth/actions";
 
-export const metadata: Metadata = { title: "Redefinir senha · W3M Canecas", referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Redefinir senha · W3M Studio", referrer: "no-referrer" };
 
 export default async function ResetPasswordPage({ searchParams }: PageProps<"/redefinir-senha">) {
   const { token } = await searchParams;

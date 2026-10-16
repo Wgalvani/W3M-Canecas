@@ -375,7 +375,7 @@ export function MugPreparer({ tokenNotice }: { tokenNotice?: TokenNotice | null 
 
       <footer className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:pb-6">
         <p className="flex items-center gap-2 border-t border-line pt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
-          <RegMark className="size-3" /> W3M Canecas · processamento 100% local
+          <RegMark className="size-3" /> W3M Studio · processamento 100% local
         </p>
       </footer>
 

@@ -1,19 +1,7 @@
 import { logout } from "@/lib/auth/actions";
 import { formatPresetSize } from "@/lib/measurements";
 import type { ProductPreset } from "@/types/image";
-
-export function MugLogo({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden>
-      <rect width="32" height="32" rx="8" fill="#16181d" />
-      <path d="M8 10h13v10a4 4 0 0 1-4 4h-5a4 4 0 0 1-4-4V10Z" fill="#f3f1eb" />
-      <path d="M21 13h1.5a3 3 0 0 1 0 6H21" fill="none" stroke="#f3f1eb" strokeWidth="2" />
-      {/* Marca de registro: o "selo" de pré-impressão da marca. */}
-      <circle cx="14.5" cy="16.5" r="3" fill="none" stroke="#ff5a1f" strokeWidth="1.4" />
-      <path d="M14.5 12v9M10 16.5h9" stroke="#ff5a1f" strokeWidth="1.4" />
-    </svg>
-  );
-}
+import { BrandMark, BrandWordmark } from "./Brand";
 
 /** Marca de registro (alvo de impressão) usada como ornamento. */
 export function RegMark({ className }: { className?: string }) {
@@ -76,10 +64,10 @@ export function Header({ preset, step, onHelp }: { preset: ProductPreset; step: 
     <header className="sticky top-0 z-20 border-b border-line bg-paper/85 backdrop-blur-md max-lg:static">
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <MugLogo className="size-9 shrink-0" />
+          <BrandMark className="size-9 shrink-0" />
           <div className="min-w-0">
-            <h1 className="truncate font-display text-[17px] font-semibold leading-tight tracking-tight">
-              W3M <span className="font-medium text-muted">Canecas</span>
+            <h1 className="truncate text-[17px] leading-tight">
+              <BrandWordmark />
             </h1>
             <p className="truncate font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
               <span className="max-sm:hidden">Estúdio de sublimação · </span>

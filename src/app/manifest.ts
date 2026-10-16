@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 /** Base para instalar como PWA no futuro (seção 45 do PRD). */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "W3M Canecas · Estúdio de Arte",
-    short_name: "W3M Canecas",
+    name: "W3M Studio · Estúdio de Arte",
+    short_name: "W3M Studio",
     description: "Artes para canecas prontas para sublimação, no tamanho que você escolher.",
     start_url: "/",
     display: "standalone",

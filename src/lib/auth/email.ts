@@ -17,9 +17,9 @@ export async function sendResetEmail(to: string, link: string, minutes: number):
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM || "W3M Canecas <onboarding@resend.dev>",
+      from: process.env.EMAIL_FROM || "W3M Studio <onboarding@resend.dev>",
       to: [to],
-      subject: "W3M Canecas · Redefinição de senha",
+      subject: "W3M Studio · Redefinição de senha",
       text: [
         "Recebemos um pedido para redefinir a senha do usuário Administrador.",
         "",
@@ -30,7 +30,7 @@ export async function sendResetEmail(to: string, link: string, minutes: number):
       ].join("\n"),
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;color:#16181d">
   <h2 style="margin:0 0 12px">Redefinição de senha</h2>
-  <p>Recebemos um pedido para redefinir a senha do usuário <strong>Administrador</strong> do W3M Canecas.</p>
+  <p>Recebemos um pedido para redefinir a senha do usuário <strong>Administrador</strong> do W3M Studio.</p>
   <p><a href="${link}" style="display:inline-block;background:#16181d;color:#f3f1eb;padding:12px 22px;border-radius:999px;text-decoration:none">Criar nova senha</a></p>
   <p style="color:#6a6e77;font-size:13px">O link vale por ${minutes} minutos e só pode ser usado uma vez. Se não foi você, ignore este e-mail: a senha atual continua valendo.</p>
 </div>`,

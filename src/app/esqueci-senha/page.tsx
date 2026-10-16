@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { ForgotForm } from "@/components/auth/forms";
 
-export const metadata: Metadata = { title: "Esqueci minha senha · W3M Canecas" };
+export const metadata: Metadata = { title: "Esqueci minha senha · W3M Studio" };
 
 export default function ForgotPasswordPage() {
   return (

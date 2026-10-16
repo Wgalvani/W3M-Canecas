@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginForm } from "@/components/auth/forms";
 import { hasValidSession } from "@/lib/auth/session";
 
-export const metadata: Metadata = { title: "Entrar · W3M Canecas" };
+export const metadata: Metadata = { title: "Entrar · W3M Studio" };
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   // Verificação completa: um cookie de antes da troca de senha não pode levar de volta ao app.

@@ -7,8 +7,8 @@ import { a4Sheet, sheetCutGuides, singleSheet, type SheetLayout } from "./sheetL
 async function createDocument(title: string) {
   const pdf = await PDFDocument.create();
   pdf.setTitle(title);
-  pdf.setCreator("Preparador de Canecas");
-  pdf.setProducer("Preparador de Canecas");
+  pdf.setCreator("W3M Studio");
+  pdf.setProducer("W3M Studio");
   // Pede ao leitor de PDF para imprimir sem "ajustar à página".
   pdf.catalog.getOrCreateViewerPreferences().setPrintScaling(PrintScaling.None);
   return pdf;

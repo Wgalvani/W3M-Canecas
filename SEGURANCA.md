@@ -26,7 +26,7 @@ Cadastre em **Project → Settings → Environment Variables** (ambiente *Produc
 3. **`ADMIN_EMAIL`** = `welder20bitcoin@gmail.com` e **`ADMIN_USERNAME`** = `Administrador`.
 4. **E-mail de redefinição ([Resend](https://resend.com))**: crie uma conta e defina **`RESEND_API_KEY`**.
    Sem domínio próprio verificado, o Resend só entrega para o e-mail dono da conta. Crie a conta com
-   `welder20bitcoin@gmail.com` ou verifique um domínio e defina `EMAIL_FROM` (ex.: `W3M Canecas <nao-responda@seudominio.com.br>`).
+   `welder20bitcoin@gmail.com` ou verifique um domínio e defina `EMAIL_FROM` (ex.: `W3M Studio <nao-responda@seudominio.com.br>`).
 5. **Gravar a nova senha ao redefinir (Global Config, antigo Edge Config)**:
    - Em **Storage → Create → Global Config**, crie a loja e conecte ao projeto. A Vercel cria `GLOBAL_CONFIG` sozinha
      (projetos antigos podem ter `EDGE_CONFIG`; os dois nomes funcionam).
