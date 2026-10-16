@@ -59,9 +59,14 @@ export async function login(_: FormState, formData: FormData): Promise<FormState
   const username = String(formData.get("username") ?? "").slice(0, 100);
   const password = String(formData.get("password") ?? "").slice(0, 256);
 
-  const hash = await readPasswordHash();
+  // Se o armazenamento falhar, recusa: voltar à senha da variável reabriria uma senha já trocada.
+  const hash = await readPasswordHash().catch((err) => {
+    console.error("[auth] Falha ao ler a senha:", err);
+    return undefined;
+  });
+  if (hash === undefined) return { error: "Login temporariamente indisponível. Tente novamente em instantes." };
   if (!hash) {
-    console.error("[auth] Nenhuma senha configurada (ADMIN_PASSWORD_HASH / Edge Config).");
+    console.error("[auth] Nenhuma senha configurada (ADMIN_PASSWORD_HASH / Global Config).");
     await pause();
     return { error: isProduction ? GENERIC_LOGIN_ERROR : "Senha ainda não configurada: rode `npm run hash-password` (veja SEGURANCA.md)." };
   }
@@ -102,7 +107,7 @@ export async function requestPasswordReset(_: FormState, formData: FormData): Pr
 
   const hash = await readPasswordHash();
   if (!hash || !canStorePassword()) {
-    console.error("[auth] Redefinição indisponível: senha inicial ou armazenamento (Edge Config) não configurados.");
+    console.error("[auth] Redefinição indisponível: senha inicial ou armazenamento (Global Config) não configurados.");
     await pause();
     return { message: RESET_SENT };
   }

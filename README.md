@@ -28,7 +28,7 @@ npm run dev             # http://localhost:3001
 1. Suba o repositório no GitHub.
 2. Na Vercel: **Add New → Project**, importe o repositório (framework detectado: Next.js).
 3. Cadastre as variáveis de ambiente descritas em [SEGURANCA.md](SEGURANCA.md) (`AUTH_SECRET`, `ADMIN_PASSWORD_HASH`,
-   `ADMIN_EMAIL` e, para a redefinição por e-mail, Resend + Edge Config). Cada push na branch principal publica uma nova versão.
+   `ADMIN_EMAIL` e, para a redefinição por e-mail, Resend + Global Config). Cada push na branch principal publica uma nova versão.
 
 ## Como funciona
 

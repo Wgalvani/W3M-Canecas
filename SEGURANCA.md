@@ -27,8 +27,9 @@ Cadastre em **Project → Settings → Environment Variables** (ambiente *Produc
 4. **E-mail de redefinição ([Resend](https://resend.com))**: crie uma conta e defina **`RESEND_API_KEY`**.
    Sem domínio próprio verificado, o Resend só entrega para o e-mail dono da conta. Crie a conta com
    `welder20bitcoin@gmail.com` ou verifique um domínio e defina `EMAIL_FROM` (ex.: `W3M Canecas <nao-responda@seudominio.com.br>`).
-5. **Gravar a nova senha ao redefinir (Edge Config)**:
-   - Em **Storage → Create → Edge Config**, crie a loja e conecte ao projeto. A Vercel cria `EDGE_CONFIG` sozinha.
+5. **Gravar a nova senha ao redefinir (Global Config, antigo Edge Config)**:
+   - Em **Storage → Create → Global Config**, crie a loja e conecte ao projeto. A Vercel cria `GLOBAL_CONFIG` sozinha
+     (projetos antigos podem ter `EDGE_CONFIG`; os dois nomes funcionam).
    - Em **Account Settings → Tokens**, crie um token com acesso ao time do projeto e salve em **`VERCEL_API_TOKEN`**.
      Se o projeto estiver em um time, defina também **`VERCEL_TEAM_ID`**.
 6. Publique de novo (*Redeploy*) para valer.
@@ -37,8 +38,8 @@ Sem os itens 4 e 5, o login funciona, mas a redefinição por e-mail fica desati
 e o motivo aparece só nos logs do servidor. Nesse caso, para trocar a senha basta gerar um novo `ADMIN_PASSWORD_HASH`
 e publicar de novo.
 
-> A senha salva pela redefinição (Edge Config) **tem prioridade** sobre `ADMIN_PASSWORD_HASH`. Para voltar a usar a
-> variável, apague o item `admin_password_hash` no Edge Config.
+> A senha salva pela redefinição (Global Config) **tem prioridade** sobre `ADMIN_PASSWORD_HASH`. Para voltar a usar a
+> variável, apague o item `admin_password_hash` em **Storage → Global Config**.
 
 ### Recomendado: regra de firewall
 
@@ -59,6 +60,6 @@ uma regra *Rate limit* para `POST` em `/login` e `/esqueci-senha` (ex.: 10 requi
   minutos, inclusive para você. É a troca por proteção contra ataque distribuído com uma conta só.
 - **A redefinição vale o mesmo que a senha.** Quem controlar o e-mail cadastrado consegue trocar a senha. Proteja esse
   e-mail com 2FA.
-- **Propagação do Edge Config.** Depois de redefinir, a nova senha pode levar alguns segundos para valer em todas as regiões.
+- **Propagação do Global Config.** Depois de redefinir, a nova senha pode levar alguns segundos para valer em todas as regiões.
 - `style-src 'unsafe-inline'` é necessário porque a interface posiciona elementos com estilos inline. Estilo inline não
   executa código; os scripts continuam restritos por nonce.

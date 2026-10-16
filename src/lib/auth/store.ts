@@ -6,7 +6,7 @@ import { isProduction } from "./config";
 /**
  * Onde fica o hash da senha do Administrador, sem banco de dados:
  *
- * 1. Vercel Edge Config (item `admin_password_hash`) — gravado ao redefinir a senha pelo app.
+ * 1. Vercel Global Config, antigo Edge Config (item `admin_password_hash`) — gravado ao redefinir a senha pelo app.
  * 2. Variável `ADMIN_PASSWORD_HASH` — a senha definida por você no painel da Vercel.
  * 3. Só em desenvolvimento: arquivo `.data/admin-password-hash` (ignorado pelo git).
  *
@@ -15,9 +15,12 @@ import { isProduction } from "./config";
 const ITEM_KEY = "admin_password_hash";
 const DEV_FILE = path.join(process.cwd(), ".data", "admin-password-hash");
 
-/** `EDGE_CONFIG` é a connection string criada pela Vercel: https://edge-config.vercel.com/<id>?token=<token>. */
+/**
+ * Connection string criada pela Vercel ao conectar a loja ao projeto (https://<host>/<id>?token=<token>).
+ * O nome mudou de EDGE_CONFIG para GLOBAL_CONFIG com a troca de marca; aceita os dois.
+ */
 function edgeConfig() {
-  const raw = process.env.EDGE_CONFIG;
+  const raw = process.env.GLOBAL_CONFIG || process.env.EDGE_CONFIG;
   if (!raw) return null;
   try {
     const url = new URL(raw);
@@ -29,17 +32,32 @@ function edgeConfig() {
   }
 }
 
+const teamQuery = () => (process.env.VERCEL_TEAM_ID ? `?teamId=${encodeURIComponent(process.env.VERCEL_TEAM_ID)}` : "");
+
+const asHash = (value: unknown) => (typeof value === "string" && value ? value : null);
+
 async function readEdgeConfig(): Promise<string | null> {
   const config = edgeConfig();
   if (!config) return null;
+  // Leitura rápida pela connection string do projeto.
   const res = await fetch(`${config.origin}/${config.id}/item/${ITEM_KEY}`, {
     headers: { Authorization: `Bearer ${config.token}` },
     cache: "no-store",
   });
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`Edge Config indisponível (${res.status})`);
-  const value: unknown = await res.json();
-  return typeof value === "string" && value ? value : null;
+  if (res.ok) return asHash(await res.json());
+
+  // Plano B: API REST da Vercel (mesmo token usado para gravar).
+  const apiToken = process.env.VERCEL_API_TOKEN;
+  if (!apiToken) throw new Error(`Global Config indisponível (${res.status})`);
+  const api = await fetch(`https://api.vercel.com/v1/edge-config/${config.id}/item/${ITEM_KEY}${teamQuery()}`, {
+    headers: { Authorization: `Bearer ${apiToken}` },
+    cache: "no-store",
+  });
+  if (api.status === 404) return null;
+  if (!api.ok) throw new Error(`Global Config indisponível (${res.status}/${api.status})`);
+  const item = (await api.json()) as { value?: unknown };
+  return asHash(item.value);
 }
 
 export async function readPasswordHash(): Promise<string | null> {
@@ -61,17 +79,16 @@ export async function writePasswordHash(hash: string): Promise<void> {
   const config = edgeConfig();
   const apiToken = process.env.VERCEL_API_TOKEN;
   if (config && apiToken) {
-    const team = process.env.VERCEL_TEAM_ID ? `?teamId=${encodeURIComponent(process.env.VERCEL_TEAM_ID)}` : "";
-    const res = await fetch(`https://api.vercel.com/v1/edge-config/${config.id}/items${team}`, {
+    const res = await fetch(`https://api.vercel.com/v1/edge-config/${config.id}/items${teamQuery()}`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${apiToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ items: [{ operation: "upsert", key: ITEM_KEY, value: hash }] }),
       cache: "no-store",
     });
-    if (!res.ok) throw new Error(`Falha ao gravar no Edge Config (${res.status})`);
+    if (!res.ok) throw new Error(`Falha ao gravar no Global Config (${res.status})`);
     return;
   }
-  if (isProduction) throw new Error("Armazenamento da senha não configurado (EDGE_CONFIG + VERCEL_API_TOKEN).");
+  if (isProduction) throw new Error("Armazenamento da senha não configurado (GLOBAL_CONFIG + VERCEL_API_TOKEN).");
   await mkdir(path.dirname(DEV_FILE), { recursive: true });
   await writeFile(DEV_FILE, hash, { mode: 0o600 });
 }
