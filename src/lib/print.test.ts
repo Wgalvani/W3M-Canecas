@@ -239,11 +239,31 @@ describe("PDF", () => {
       .map((stream) => new TextDecoder().decode(decodePDFRawStream(stream).decode()))
       .join("\n");
     return {
+      ops,
       size: page.getSize(),
       lines: (ops.match(/ l\b/g) ?? []).length,
       images: (ops.match(/ Do\b/g) ?? []).length,
+      // Escala aplicada a cada imagem: a matriz "w 0 0 h 0 0 cm" (seguida do skew nulo) antes do Do.
+      imageSizes: [...ops.matchAll(/([\d.]+) 0 0 ([\d.]+) 0 0 cm\s+1 0 0 1 0 0 cm\s+\/\S+ Do/g)].map((m) => ({ width: +m[1], height: +m[2] })),
     };
   }
+
+  it.each([1, 2, 3])("PDF A4 com %i arte(s): cada arte desenhada em exatos 21 × 9,5 cm", async (count) => {
+    const { imageSizes } = await inspect(await generateA4Pdf(png, preset, count));
+    expect(imageSizes).toHaveLength(count);
+    for (const size of imageSizes) {
+      expect(size.width).toBeCloseTo(mmToPt(210), 2);
+      expect(size.height).toBeCloseTo(mmToPt(95), 2);
+    }
+  });
+
+  it("PDF A4 paisagem traz a régua de conferência de 10 cm", async () => {
+    const { ops } = await inspect(await generateA4Pdf(png, preset, 2));
+    const vertical = [...ops.matchAll(/([\d.]+) ([\d.]+) m\s+([\d.]+) ([\d.]+) l/g)]
+      .map((m) => m.slice(1).map(Number))
+      .filter(([x1, y1, x2, y2]) => Math.abs(x1 - x2) < 1e-3 && Math.abs(y1 - y2) > 1);
+    expect(vertical.some(([, y1, , y2]) => Math.abs(Math.abs(y1 - y2) - mmToPt(100)) < 1e-2)).toBe(true);
+  });
 
   it("PDF individual: 230 × 115 mm, 1 arte e 8 marcas", async () => {
     const { size, lines, images } = await inspect(await generateArtPdf(png, preset));
@@ -253,12 +273,12 @@ describe("PDF", () => {
     expect(lines).toBe(8);
   });
 
-  it("PDF A4: paisagem, 2 artes e 14 marcas", async () => {
+  it("PDF A4: paisagem, 2 artes, 14 marcas e a régua (1 linha + 11 traços)", async () => {
     const { size, lines, images } = await inspect(await generateA4Pdf(png, preset, 2));
     expect(size.width).toBeCloseTo(mmToPt(297));
     expect(size.height).toBeCloseTo(mmToPt(210));
     expect(images).toBe(2);
-    expect(lines).toBe(14);
+    expect(lines).toBe(14 + 12);
   });
 });
 

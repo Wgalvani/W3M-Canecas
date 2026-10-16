@@ -123,7 +123,7 @@ export function ExportModal({
           {kind === "pdf-single" && `Arte de ${sizeLabel} com marcas de corte, em página de ${sheetLabel}.`}
           {kind === "pdf-a4" &&
             a4Count !== "3" &&
-            `A4 paisagem com ${a4Count === "1" ? `1 arte de ${sizeLabel}` : `2 artes de ${sizeLabel}, separadas por ${A4_ART_GAP_MM} mm,`} e marcas de corte. A distância entre as marcas confere a escala.`}
+            `A4 paisagem com ${a4Count === "1" ? `1 arte de ${sizeLabel}` : `2 artes de ${sizeLabel}, separadas por ${A4_ART_GAP_MM} mm,`} e marcas de corte. Na margem há uma régua de 10 cm: meça depois de imprimir. Se der menos (ex.: 9,7 cm), a impressão foi reduzida; imprima com escala 100% / tamanho real.`}
           {kind === "pdf-a4" && a4Count === "3" && (
             <>
               A4 em pé com 3 artes de {sizeLabel}, separadas por {formatMm(A4_BORDERLESS.gapMm)} mm. Corte sobre as

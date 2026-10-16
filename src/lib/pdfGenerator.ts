@@ -1,7 +1,7 @@
 import { PDFDocument, PrintScaling, StandardFonts, rgb, type PDFPage } from "pdf-lib";
 import type { ProductPreset } from "@/types/image";
 import { A4_BORDERLESS, CROP_MARKS } from "./constants";
-import { formatCm, formatPresetSize, mmToPt } from "./measurements";
+import { MM_PER_INCH, formatCm, formatPresetSize, mmToPt } from "./measurements";
 import { a4Sheet, sheetCutGuides, singleSheet, type SheetLayout } from "./sheetLayout";
 
 async function createDocument(title: string) {
@@ -87,19 +87,30 @@ async function drawBorderlessNotes(pdf: PDFDocument, page: PDFPage, layout: Shee
   }
 }
 
-/** Instruções na margem esquerda, longe das marcas de corte. */
+/** Comprimento da régua de conferência impressa na margem da folha paisagem. */
+const SCALE_RULER_MM = 100;
+
+/**
+ * Instruções e régua de 10 cm na margem esquerda, longe das marcas de corte.
+ * A régua denuncia o "ajustar à área imprimível" do diálogo de impressão, que
+ * reduz a folha inteira em ~3% sem avisar.
+ */
 async function drawPrintNotes(pdf: PDFDocument, page: PDFPage, layout: SheetLayout, preset: ProductPreset) {
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const color = rgb(0.4, 0.4, 0.4);
+  const rulerNote: [string, typeof font] = ["Régua abaixo: deve medir 10 cm", bold];
   const lines: Array<[string, typeof font]> = [
     ["IMPRIMIR EM", bold],
     ["TAMANHO REAL (100%)", bold],
-    ["Não usar \"Ajustar à página\".", font],
+    ["Não usar \"Ajustar à página\"", font],
+    ["nem \"Ajustar à área imprimível\".", font],
     ["", font],
     ["Conferência da escala:", bold],
     [`entre marcas verticais: ${formatCm(preset.widthMm)} cm`, font],
     [`entre marcas horizontais: ${formatCm(preset.heightMm)} cm`, font],
+    ["", font],
+    rulerNote,
   ];
 
   const left = 6;
@@ -110,8 +121,14 @@ async function drawPrintNotes(pdf: PDFDocument, page: PDFPage, layout: SheetLayo
   // Arte larga demais deixa a margem estreita: abaixo disso o texto seria ilegível.
   if (size < 4) return;
   const top = layout.arts[0].y + 12;
+  const lineMm = (size * 1.4 * MM_PER_INCH) / 72;
 
-  lines.forEach(([text, f], index) => {
+  // A régua fica abaixo do texto e precisa caber antes da faixa não imprimível.
+  const rulerTop = top + lines.length * lineMm;
+  const rulerFits = rulerTop + SCALE_RULER_MM <= layout.heightMm - CROP_MARKS.printerMarginMm - 2;
+  const notes = rulerFits ? lines : lines.slice(0, -2);
+
+  notes.forEach(([text, f], index) => {
     page.drawText(text, {
       x: mmToPt(left),
       y: mmToPt(layout.heightMm - top) - index * size * 1.4,
@@ -120,4 +137,18 @@ async function drawPrintNotes(pdf: PDFDocument, page: PDFPage, layout: SheetLayo
       color,
     });
   });
+  if (rulerFits) drawScaleRuler(page, layout, left + 1, rulerTop);
+}
+
+/** Régua vertical de 10 cm com traços a cada 1 cm (maiores em 0, 5 e 10). */
+function drawScaleRuler(page: PDFPage, layout: SheetLayout, xMm: number, topMm: number) {
+  const color = rgb(0, 0, 0);
+  const thickness = mmToPt(CROP_MARKS.strokeMm);
+  const y = (mm: number) => mmToPt(layout.heightMm - mm);
+  page.drawLine({ start: { x: mmToPt(xMm), y: y(topMm) }, end: { x: mmToPt(xMm), y: y(topMm + SCALE_RULER_MM) }, thickness, color });
+  for (let cm = 0; cm <= SCALE_RULER_MM / 10; cm++) {
+    const tick = cm % 5 === 0 ? 4 : 2;
+    const at = y(topMm + cm * 10);
+    page.drawLine({ start: { x: mmToPt(xMm), y: at }, end: { x: mmToPt(xMm + tick), y: at }, thickness, color });
+  }
 }

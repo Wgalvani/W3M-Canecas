@@ -14,6 +14,9 @@ export function PrintNotice({ compact }: { compact?: boolean }) {
         <li>
           <span aria-hidden className="font-semibold text-red-700">✕ </span>Não utilizar “Ajustar à página”
         </li>
+        <li>
+          <span aria-hidden className="font-semibold text-red-700">✕ </span>Não utilizar “Ajustar à área imprimível”
+        </li>
       </ul>
     </div>
   );
