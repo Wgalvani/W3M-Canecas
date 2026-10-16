@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { hashPassword, passwordProblem, verifyPassword } from "./password";
 import { createRateLimiter } from "./rateLimit";
+import { tokenNotice } from "./tokenNotice";
 import { passwordVersion, signToken, verifyToken } from "./token";
 
 const SECRET = "x".repeat(40);
@@ -70,5 +71,27 @@ describe("limite de tentativas", () => {
     limiter.hit("ip", 20);
     expect(limiter.retryAfter("ip", 30)).toBeGreaterThan(0);
     expect(limiter.retryAfter("ip", 1001)).toBe(0);
+  });
+});
+
+describe("lembrete do token da Vercel", () => {
+  const now = Date.UTC(2027, 8, 1);
+  const day = 86_400_000;
+
+  it("não avisa longe do vencimento nem sem data", () => {
+    expect(tokenNotice({ status: 200, expiresAt: now + 60 * day }, now)).toBeNull();
+    expect(tokenNotice({ status: 200, expiresAt: null }, now)).toBeNull();
+    expect(tokenNotice({ status: 500 }, now)).toBeNull();
+  });
+
+  it("avisa nos últimos 30 dias, inclusive com data em texto", () => {
+    expect(tokenNotice({ status: 200, expiresAt: String(now + 10 * day) }, now)).toMatchObject({ kind: "expiring", daysLeft: 10 });
+    expect(tokenNotice({ status: 200, expiresAt: now + 30 * day }, now)).toMatchObject({ kind: "expiring", daysLeft: 30 });
+  });
+
+  it("marca como vencido após a data ou quando a Vercel recusa o token", () => {
+    expect(tokenNotice({ status: 200, expiresAt: now - day }, now)?.kind).toBe("expired");
+    expect(tokenNotice({ status: 401 }, now)?.kind).toBe("expired");
+    expect(tokenNotice({ status: 403 }, now)?.kind).toBe("expired");
   });
 });

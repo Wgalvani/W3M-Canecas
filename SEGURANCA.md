@@ -41,10 +41,43 @@ e publicar de novo.
 > A senha salva pela redefinição (Global Config) **tem prioridade** sobre `ADMIN_PASSWORD_HASH`. Para voltar a usar a
 > variável, apague o item `admin_password_hash` em **Storage → Global Config**.
 
+### Renovação do token da Vercel (`VERCEL_API_TOKEN`)
+
+O token atual vence em **16/10/2027**. A partir de 30 dias antes, o app mostra um aviso no topo da tela, já com o
+passo a passo. O aviso também aparece se o token for revogado. A data é lida da própria Vercel, então o aviso
+acompanha qualquer token novo. Se o token vencer, **o login continua funcionando**; só o "Esqueci minha senha" para.
+
+1. Vercel → **Account Settings → Tokens → Create Token**: nome `w3m-canecas-senha`,
+   **Scope = WG Solutions' projects** (a conta, **não** o projeto) e **Expiration = 1 Year**. Copie o token.
+2. Projeto **w3m-canecas → Settings → Environments → Production → Environment Variables**: edite
+   `VERCEL_API_TOKEN`, cole o novo token e marque *Sensitive*.
+3. **Deployments → ⋯ → Redeploy** e aguarde ficar *Ready*.
+4. Teste o **Esqueci minha senha**.
+5. Em **Tokens**, revogue o token antigo (**⋯ → Revoke**).
+
+> Um token com escopo no **projeto** não enxerga o Global Config, que pertence à conta. Nesse caso a gravação da
+> senha falha com erro 404 nos logs.
+
 ### Recomendado: regra de firewall
 
-O limite de tentativas fica na memória de cada instância. Para um bloqueio global, crie em **Firewall → Custom Rules**
-uma regra *Rate limit* para `POST` em `/login` e `/esqueci-senha` (ex.: 10 requisições por minuto por IP).
+O limite de tentativas do app fica na memória de cada instância. A regra abaixo bloqueia na borda da Vercel, antes
+de chegar ao app, e vale para todas as instâncias.
+
+1. Projeto **w3m-canecas → Firewall** (menu do topo) → **Configure** (ou **Rules**) → **+ New Rule**.
+2. **Name:** `Limitar login e redefinição`.
+3. **If** (condições, todas com *AND*):
+   - `Request Path` · `Equals` · `/login`. Adicione **OR** para `/esqueci-senha` e `/redefinir-senha`
+     (ou use `Matches Expression` com `^/(login|esqueci-senha|redefinir-senha)$`).
+   - **AND** `Method` · `Equals` · `POST`.
+4. **Then:** **Rate Limit** → *Fixed Window*, **60 s**, **10 requisições**, chave **IP**, ação ao exceder **Deny**
+   (ou **Too Many Requests / 429**).
+5. **Save Rule** → **Review Changes** → **Publish**.
+
+Para testar, tente entrar 11 vezes em menos de 1 minuto com a senha errada: as tentativas extras são recusadas pela
+Vercel. Em **Firewall → Traffic** aparecem as requisições bloqueadas.
+
+Se o plano **Hobby** não oferecer a ação *Rate Limit*, deixe o app cuidar disso (o limite próprio dele já está ativo).
+Em caso de ataque, ligue **Firewall → Attack Challenge Mode** temporariamente.
 
 ## Desenvolvimento local
 

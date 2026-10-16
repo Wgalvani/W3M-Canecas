@@ -11,6 +11,7 @@ import { formatAspectRatio, formatFileSize, formatPresetSize, targetPixels } fro
 import { generateA4Pdf, generateArtPdf } from "@/lib/pdfGenerator";
 import { a4Capacity } from "@/lib/sheetLayout";
 import { createTestPatternFile } from "@/lib/testPattern";
+import type { TokenNotice } from "@/lib/auth/tokenNotice";
 import type { ExportKind, FitMode, Framing, LoadedImage, ProductPreset } from "@/types/image";
 import { ExportModal } from "./ExportModal";
 import { Header, RegMark, type Step } from "./Header";
@@ -24,12 +25,13 @@ import { PrintNotice } from "./PrintNotice";
 import { SegmentedControl } from "./SegmentedControl";
 import { SizeControl } from "./SizeControl";
 import { btn, eyebrow } from "./ui";
+import { TokenReminder } from "./TokenReminder";
 import { ZoomControl } from "./ZoomControl";
 
 /** Deixa o navegador pintar o indicador de carregamento antes de um trabalho pesado. */
 const nextPaint = () => new Promise<void>((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 
-export function MugPreparer() {
+export function MugPreparer({ tokenNotice }: { tokenNotice?: TokenNotice | null }) {
   const [preset, setPreset] = useState<ProductPreset>(DEFAULT_PRESET);
   const [image, setImage] = useState<LoadedImage | null>(null);
   const [framing, setFraming] = useState<Framing>(() => initialFraming());
@@ -163,6 +165,7 @@ export function MugPreparer() {
       <Header preset={preset} step={step} onHelp={() => setHelpOpen(true)} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-4 sm:px-6 sm:pt-6 lg:pb-10">
+        {tokenNotice && <TokenReminder notice={tokenNotice} />}
         {error && (
           <div
             role="alert"
