@@ -57,7 +57,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!_next/static|_next/image|favicon.ico|icon.svg|manifest.webmanifest|robots.txt).*)",
+      // Modelos 3D (/models) são públicos (CC0) e ficam em cache no navegador.
+      source: "/((?!_next/static|_next/image|models/|favicon.ico|icon.svg|manifest.webmanifest|robots.txt).*)",
       missing: [{ type: "header", key: "next-router-prefetch" }],
     },
   ],

@@ -21,6 +21,7 @@ import { ImageQuality } from "./ImageQuality";
 import { MirrorBadge, MirrorToggle } from "./MirrorToggle";
 import { Mug3DDialog } from "./Mug3DDialog";
 import { MugEditor } from "./MugEditor";
+import { Panel } from "./Panel";
 import { PrintNotice } from "./PrintNotice";
 import { SegmentedControl } from "./SegmentedControl";
 import { SizeControl } from "./SizeControl";
@@ -161,8 +162,8 @@ export function MugPreparer({ tokenNotice }: { tokenNotice?: TokenNotice | null 
   const step: Step = !image ? 1 : exported ? 3 : 2;
 
   return (
-    <div className="flex min-h-dvh flex-col" {...dropHandlers}>
-      <Header preset={preset} step={step} onHelp={() => setHelpOpen(true)} />
+    <div className="flex min-h-dvh flex-col lg:pl-60" {...dropHandlers}>
+      <Header product="canecas" subtitle={formatPresetSize(preset)} step={step} onHelp={() => setHelpOpen(true)} />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-28 pt-4 sm:px-6 sm:pt-6 lg:pb-10">
         {tokenNotice && <TokenReminder notice={tokenNotice} />}
@@ -373,7 +374,7 @@ export function MugPreparer({ tokenNotice }: { tokenNotice?: TokenNotice | null 
         )}
       </main>
 
-      <footer className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:pb-6">
+      <footer className="mx-auto w-full max-w-7xl px-4 pb-24 sm:px-6 lg:hidden">
         <p className="flex items-center gap-2 border-t border-line pt-4 font-mono text-[11px] uppercase tracking-[0.14em] text-muted">
           <RegMark className="size-3" /> W3M Studio · processamento 100% local
         </p>
@@ -432,29 +433,5 @@ export function MugPreparer({ tokenNotice }: { tokenNotice?: TokenNotice | null 
         </div>
       )}
     </div>
-  );
-}
-
-/** Seção do painel de propriedades, numerada como uma ficha técnica. */
-function Panel({
-  number,
-  title,
-  className = "",
-  children,
-}: {
-  number: string;
-  title: string;
-  className?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={`px-5 py-5 ${className}`}>
-      <h2 className="mb-4 flex items-center gap-2.5">
-        <span className="font-mono text-[11px] text-signal-ink">{number}</span>
-        <span className="font-display text-[15px] font-semibold tracking-tight">{title}</span>
-        <span aria-hidden className="h-px flex-1 bg-line-soft" />
-      </h2>
-      {children}
-    </section>
   );
 }
