@@ -99,7 +99,7 @@ const SWEAT_SIZES = {
 };
 
 const TEE_SLEEVE: SleeveSpec = { lengthCm: 21, angleDeg: 40, rootRadiusCm: 9.4, endRadiusCm: 8, cuffCm: 0 };
-const SWEAT_SLEEVE: SleeveSpec = { lengthCm: 64, angleDeg: 72, rootRadiusCm: 10, endRadiusCm: 6.2, cuffCm: 6 };
+const SWEAT_SLEEVE: SleeveSpec = { lengthCm: 64, angleDeg: 72, rootRadiusCm: 9.6, endRadiusCm: 5.8, cuffCm: 6 };
 
 const BASE: Omit<GarmentSpec, "id" | "name" | "short" | "category"> = {
   sizes: TEE_SIZES,
