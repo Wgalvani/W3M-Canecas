@@ -294,6 +294,34 @@ describe("PDF A4 sem margem", () => {
     expect(size.width).toBeCloseTo(mmToPt(210));
     expect(size.height).toBeCloseTo(mmToPt(297));
   });
+
+  async function segments(bytes: Uint8Array) {
+    const doc = await PDFDocument.load(bytes);
+    const contents = doc.getPage(0).node.Contents();
+    const refs = contents instanceof PDFArray ? contents.asArray() : contents ? [contents] : [];
+    const ops = refs
+      .map((ref) => doc.context.lookup(ref))
+      .filter((stream): stream is PDFRawStream => stream instanceof PDFRawStream)
+      .map((stream) => new TextDecoder().decode(decodePDFRawStream(stream).decode()))
+      .join("\n");
+    return [...ops.matchAll(/([\d.]+) ([\d.]+) m\s+([\d.]+) ([\d.]+) l/g)].map((m) => m.slice(1).map(Number));
+  }
+
+  it("traz a régua de 10 cm na sobra de baixo, fora das artes", async () => {
+    const lines = await segments(await generateA4Pdf(png, preset, 3));
+    const ticks = lines.filter(([x1, , x2]) => Math.abs(x1 - x2) < 1e-3);
+    expect(ticks).toHaveLength(11);
+    const xs = ticks.map(([x]) => x);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(mmToPt(100), 2);
+    // Abaixo da última linha de corte (y do PDF conta a partir de baixo).
+    const lastCut = Math.min(...lines.filter(([, y1, , y2]) => y1 === y2).map(([, y]) => y));
+    for (const [, y1, , y2] of ticks) expect(Math.max(y1, y2)).toBeLessThan(lastCut);
+  });
+
+  it("sem sobra suficiente, a régua fica de fora", async () => {
+    const lines = await segments(await generateA4Pdf(png, presetForSize(210, 97), 3));
+    expect(lines.filter(([x1, , x2]) => Math.abs(x1 - x2) < 1e-3)).toHaveLength(0);
+  });
 });
 
 describe("tamanho escolhido pelo usuário", () => {

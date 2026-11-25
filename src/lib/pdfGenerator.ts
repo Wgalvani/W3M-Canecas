@@ -59,31 +59,72 @@ export async function generateA4Pdf(png: Uint8Array, preset: ProductPreset, coun
   return pdf.save();
 }
 
-/** Folha sem margem: uma linha de instrução nas sobras de cima e de baixo, que saem no corte. */
+/** Régua da folha sem margem: traços a cada 1 cm, sem linha-base para não parecer uma linha de corte. */
+export const BORDERLESS_RULER = {
+  lengthMm: 100,
+  /** Distância entre a linha de corte e o início dos traços. */
+  offsetMm: 0.6,
+  minorMm: 0.9,
+  majorMm: 1.6,
+  /** Afastamento da borda direita do papel. */
+  sideMm: 8,
+} as const;
+
+/**
+ * Folha sem margem: uma linha de instrução nas sobras de cima e de baixo, que saem no corte.
+ * Na sobra de baixo vai também uma régua de 10 cm: se o diálogo de impressão reduzir a
+ * folha (ex.: "Ajustar à página"), ela mede menos de 10 cm e denuncia a escala errada.
+ */
 async function drawBorderlessNotes(pdf: PDFDocument, page: PDFPage, layout: SheetLayout, preset: ProductPreset) {
   const font = await pdf.embedFont(StandardFonts.HelveticaBold);
   const color = rgb(0.4, 0.4, 0.4);
   const first = layout.arts[0];
   const last = layout.arts[layout.arts.length - 1];
   const guide = A4_BORDERLESS.gapMm / 2;
-  const notes: Array<[string, number, number]> = [
-    // [texto, início da faixa livre, fim da faixa livre] em mm a partir do topo
-    ["IMPRIMIR EM TAMANHO REAL (100%) E SEM MARGEM (BORDERLESS)", 0, first.y - guide],
-    [`Cortar sobre as linhas · cada arte: ${formatPresetSize(preset)}`, last.y + last.height + guide, layout.heightMm],
+  const bottomFrom = last.y + last.height + guide;
+  const ruler = BORDERLESS_RULER;
+  const rulerFits = layout.heightMm - bottomFrom >= ruler.offsetMm + ruler.majorMm + 0.5;
+  const rulerLeft = layout.widthMm - ruler.sideMm - ruler.lengthMm;
+  const cutNote = `Cortar sobre as linhas · cada arte: ${formatPresetSize(preset)}`;
+
+  const notes: Array<[string, number, number, "center" | "left"]> = [
+    // [texto, início da faixa livre, fim da faixa livre, alinhamento] em mm a partir do topo
+    ["IMPRIMIR EM TAMANHO REAL (100%) E SEM MARGEM (BORDERLESS)", 0, first.y - guide, "center"],
+    rulerFits
+      ? [`${cutNote} · régua ao lado: 10 cm`, bottomFrom, layout.heightMm, "left"]
+      : [cutNote, bottomFrom, layout.heightMm, "center"],
   ];
-  for (const [text, from, to] of notes) {
+  for (const [text, from, to, align] of notes) {
     const band = to - from;
     // Texto ocupa até metade da faixa, longe da linha e da borda do papel.
-    const size = Math.min(6, mmToPt(band / 2) / 0.72);
+    let size = Math.min(6, mmToPt(band / 2) / 0.72);
+    if (align === "left") {
+      // Não pode invadir a régua.
+      const room = mmToPt(rulerLeft - ruler.sideMm - 3);
+      size = Math.min(size, room / font.widthOfTextAtSize(text, 1));
+    }
     if (size < 3) continue;
     const width = font.widthOfTextAtSize(text, size);
     page.drawText(text, {
-      x: (mmToPt(layout.widthMm) - width) / 2,
+      x: align === "left" ? mmToPt(ruler.sideMm) : (mmToPt(layout.widthMm) - width) / 2,
       y: mmToPt(layout.heightMm - (from + to) / 2) - (size * 0.72) / 2,
       size,
       font,
       color,
     });
+  }
+  if (rulerFits) drawBorderlessRuler(page, layout, rulerLeft, bottomFrom + ruler.offsetMm);
+}
+
+/** Traços pendurados a partir de `topMm`: maiores em 0, 5 e 10 cm. */
+function drawBorderlessRuler(page: PDFPage, layout: SheetLayout, leftMm: number, topMm: number) {
+  const color = rgb(0, 0, 0);
+  const thickness = mmToPt(CROP_MARKS.strokeMm);
+  const y = (mm: number) => mmToPt(layout.heightMm - mm);
+  for (let cm = 0; cm <= BORDERLESS_RULER.lengthMm / 10; cm++) {
+    const tick = cm % 5 === 0 ? BORDERLESS_RULER.majorMm : BORDERLESS_RULER.minorMm;
+    const x = mmToPt(leftMm + cm * 10);
+    page.drawLine({ start: { x, y: y(topMm) }, end: { x, y: y(topMm + tick) }, thickness, color });
   }
 }
 
