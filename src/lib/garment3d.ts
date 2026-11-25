@@ -455,13 +455,30 @@ function buildGarment(
   for (let i = 0; i < 72; i++) bodyChest += hull((i / 72) * Math.PI * 2, chestY) * span;
   const ease = Math.max(1.03, (2 * spec.sizes[size].chestCm) / bodyChest);
 
+  /**
+   * Quanto vale a regra "o tecido não entra no corpo" (0–1). Nas laterais, acima da
+   * axila, a medida pega o braço e não vale; a passagem é gradual (corte seco deixava
+   * um vinco nas costas, perto das cavas).
+   */
+  const skinWeight = (sin: number, y: number) => {
+    const byAngle = smooth(Math.min(1, Math.max(0, (0.82 - Math.abs(sin)) / 0.22)));
+    const byHeight = smooth(Math.min(1, Math.max(0, (body.armpitY - 2 - y) / 4)));
+    return Math.max(byAngle, byHeight);
+  };
+
   const radiusAt = (theta: number, y: number) => {
     let r = hull(theta, y) * ease + 0.3;
     if (spec.hemBandCm > 0 && y < hem + spec.hemBandCm) r *= lerp(0.93, 1, (y - hem) / spec.hemBandCm);
     // O tecido nunca fica por dentro do corpo (peças justas no peitoral, perto da axila).
     // Nas laterais, acima da axila, a medida pega o braço: ali não vale.
     const skinY = Math.min(y, body.armpitY + 4);
-    if (Math.abs(Math.sin(theta)) < 0.7 || y < body.armpitY - 4) r = Math.max(r, field.torso(theta, skinY) + 0.8);
+    const w = skinWeight(Math.sin(theta), y);
+    if (w > 0) {
+      // "Tenda": o tecido cai da saliência logo acima (escápula, peitoral), sem bico.
+      let skin = field.torso(theta, skinY);
+      for (let up = 1.5; up <= 6; up += 1.5) skin = Math.max(skin, field.torso(theta, Math.min(skinY + up, body.armpitY + 4)) - up * 0.08);
+      r = Math.max(r, lerp(r, skin + 0.8, w));
+    }
     // Barra: folga sobre o quadril/calça do manequim (a medida do tronco para no quadril).
     {
       // Transição gradual (sem degrau) da cintura até a barra.
@@ -481,13 +498,10 @@ function buildGarment(
     const r = radiusAt(theta, y);
     const s = Math.sin(theta);
     const c = Math.cos(theta);
-    // Dobras: caimento vertical perto da barra e franzidos leves nas laterais.
+    // Dobras: caimento vertical perto da barra (sem franzidos na axila: viravam bicos nas costas).
     const low = Math.max(0, 1 - (y - hem) / (dims.length * 0.55));
-    const side = Math.abs(s);
-    const armpit = Math.exp(-(((y - (body.armpitY - 8)) / 7) ** 2));
     const fold =
       (plush ? 0.22 : 0.45) * Math.sin(theta * 7 + 1.3 + y * 0.06) * low * low +
-      (plush ? 0.12 : 0.22) * Math.sin(y * 0.45 + side * 9) * Math.exp(-(((side - 0.8) / 0.16) ** 2)) * armpit +
       (spec.hemBandCm ? 0 : 0.16 * Math.exp(-(((y - hem - 2.2) / 0.35) ** 2)) + 0.12 * Math.max(0, 1 - (y - hem) / 0.6));
     return [cx + s * (r + fold), y, cz + c * (r + fold)];
   };
@@ -640,10 +654,24 @@ function buildGarment(
         if (p[1] > body.neckBaseY - 1) continue;
         const angle = Math.atan2(p[0] - cx, p[2] - cz);
         const radial = Math.hypot(p[0] - cx, p[2] - cz);
-        const skin = field.torso(angle, p[1]) + 0.7;
-        if (radial < skin && (Math.abs(Math.sin(angle)) < 0.7 || p[1] < body.armpitY - 4)) {
-          p[0] = cx + Math.sin(angle) * skin;
-          p[2] = cz + Math.cos(angle) * skin;
+        // O tecido cai das saliências logo acima (escápula, peitoral): faz uma "tenda"
+        // em vez de grudar na ponta do osso.
+        let skin = field.torso(angle, p[1]);
+        for (let up = 1.5; up <= 6; up += 1.5) skin = Math.max(skin, field.torso(angle, Math.min(p[1] + up, body.armpitY + 2)) - up * 0.08);
+        skin += 0.7;
+        const target = lerp(radial, skin, skinWeight(Math.sin(angle), p[1]));
+        if (radial < target) {
+          p[0] = cx + Math.sin(angle) * target;
+          p[2] = cz + Math.cos(angle) * target;
+        }
+      }
+    }
+    for (let pass = 0; pass < 6; pass++) {
+      const prev = points.map((line) => line.map((p) => [p[0], p[2]]));
+      for (let row = lo; row <= hi; row++) {
+        for (let column = 0; column <= AROUND; column++) {
+          points[row][column][0] = (prev[row - 1][column][0] + 2 * prev[row][column][0] + prev[row + 1][column][0]) / 4;
+          points[row][column][2] = (prev[row - 1][column][1] + 2 * prev[row][column][1] + prev[row + 1][column][1]) / 4;
         }
       }
     }
@@ -669,6 +697,38 @@ function buildGarment(
         points[row][column][1] = Math.max(heights[column] - 0.6, sum / 5);
       }
       points[row][AROUND][1] = points[row][0][1];
+    }
+  }
+  // Ombros e costas altas lisos: as leituras do corpo (escápulas, trapézio) deixavam
+  // calombos e covinhas. Alisa a malha inteira do ombro e garante que não entre no corpo.
+  {
+    const lo = firstYoke - 4;
+    const hi = lastYoke - collarRows - 1;
+    for (let pass = 0; pass < 16; pass++) {
+      const prev = points.map((line) => line.map((p) => [...p]));
+      for (let row = lo; row <= hi; row++) {
+        for (let column = 0; column < AROUND; column++) {
+          const left = prev[row][(column - 1 + AROUND) % AROUND];
+          const right = prev[row][(column + 1) % AROUND];
+          for (let k = 0; k < 3; k++) {
+            points[row][column][k] = (prev[row - 1][column][k] + prev[row + 1][column][k] + left[k] + right[k] + 4 * prev[row][column][k]) / 8;
+          }
+        }
+        points[row][AROUND] = [...points[row][0]];
+      }
+    }
+    for (let row = lo; row <= hi; row++) {
+      for (const p of points[row]) {
+        if (p[1] > body.neckBaseY - 1) continue;
+        const angle = Math.atan2(p[0] - cx, p[2] - cz);
+        const radial = Math.hypot(p[0] - cx, p[2] - cz);
+        const skin = field.torso(angle, p[1]) + 0.7;
+        const target = lerp(radial, skin, skinWeight(Math.sin(angle), p[1]));
+        if (radial < target) {
+          p[0] = cx + Math.sin(angle) * target;
+          p[2] = cz + Math.cos(angle) * target;
+        }
+      }
     }
   }
 
@@ -739,6 +799,51 @@ function buildGarment(
   }
 
   /* Mangas ---------------------------------------------------------------- */
+  // Linha do ombro da peça: altura máxima do tronco pronto por distância ao centro
+  // (bins de 0,5 cm). A manga continua esta linha sem degrau (ver `shoulderLine`).
+  const TOP_BIN = 0.5;
+  const torsoTop: number[] = [];
+  for (const line of points) {
+    for (const p of line) {
+      const bin = Math.round(Math.abs(p[0] - cx) / TOP_BIN);
+      torsoTop[bin] = Math.max(torsoTop[bin] ?? -Infinity, p[1]);
+    }
+  }
+  const topAtX = (ax: number) => {
+    const f = ax / TOP_BIN;
+    const i = Math.max(0, Math.min(torsoTop.length - 2, Math.floor(f)));
+    const a = torsoTop[i] ?? -Infinity;
+    const b = torsoTop[i + 1] ?? a;
+    return lerp(a, b, Math.min(1, Math.max(0, f - i)));
+  };
+  /** Ponto da costura no ombro: daqui para fora o tronco despenca e a manga assume. */
+  const seamX = capHalf - 2.2;
+  const seamY = topAtX(seamX);
+  const seamSlope = (seamY - topAtX(seamX - 3)) / 3;
+  /**
+   * Teto do tecido da manga em |x| = ax: por cima do tronco fica logo abaixo dele
+   * (a costura some sob o ombro); para fora, continua a inclinação do ombro e curva
+   * para baixo sobre o deltoide, cobrindo a borda do tronco.
+   */
+  const shoulderLine = (ax: number) => {
+    if (ax <= seamX) return topAtX(ax) - 0.25;
+    const d = ax - seamX;
+    const line = seamY - 0.25 + seamSlope * d - 0.045 * d * d;
+    // Nunca abaixo da borda do tronco (que precisa ficar escondida sob a manga).
+    return Math.max(line, d < 4 ? topAtX(ax) - 0.25 + 0.65 * smooth(d / 1.5) : -Infinity);
+  };
+  /** Aplica o teto do ombro (mínimo suave) só perto do ombro; mais abaixo a manga segue livre. */
+  const fitShoulder = (p: Vec3 | number[]) => {
+    const ax = Math.abs(p[0] - cx);
+    const d = ax - seamX;
+    const weight = 1 - smooth(Math.min(1, Math.max(0, (d - 5) / 7)));
+    if (weight <= 0) return;
+    const limit = shoulderLine(ax);
+    const k = 0.8;
+    const h = Math.max(0, Math.min(1, 0.5 + (limit - p[1]) / (2 * k)));
+    const soft = lerp(limit, p[1], h) - k * h * (1 - h);
+    (p as number[])[1] = lerp(p[1], Math.min(p[1], soft), weight);
+  };
   const sleeveColumns = 64;
   const sleeveRows = 56;
   const cuffRows = (spec.sleeve?.cuffCm ?? 0) > 0 ? 10 : 0;
@@ -809,7 +914,7 @@ function buildGarment(
     };
     // Cava (costura no tronco): elipse quase vertical da ponta do ombro até a axila,
     // um pouco por dentro do tronco para a borda dele cobrir a costura.
-    const shoulderPt = new Vector3(side * (capHalf - 1), field.shoulderAt(capHalf - 1) + 1.1, root.z + 0.4);
+    const shoulderPt = new Vector3(side * (seamX - 0.4), topAtX(seamX - 0.4) - 0.35, root.z + 0.4);
     const pitY = body.armpitY - 1;
     const pitX = side * Math.max(capHalf - 2.5, radiusAt(side > 0 ? Math.PI / 2 : (3 * Math.PI) / 2, pitY) - 1.2);
     const armhole = {
@@ -818,7 +923,7 @@ function buildGarment(
       cy: (shoulderPt.y + pitY) / 2,
       ry: (shoulderPt.y - pitY) / 2,
       cz: root.z + 0.6,
-      rz: dims.sleeveRootRadius * 0.92,
+      rz: dims.sleeveRootRadius * 1.02,
     };
     const shoulderUp = new Vector3(side, 1, 0).normalize();
     const point = (column: number, row: number): Vec3 => {
@@ -880,6 +985,79 @@ function buildGarment(
         for (let column = 0; column <= sleeveColumns; column++) {
           for (let k = 0; k < 3; k++) grid[row][column][k] = (prev[row - 1][column][k] + 2 * prev[row][column][k] + prev[row + 1][column][k]) / 4;
         }
+      }
+    }
+    // O braço nunca atravessa a manga: o braço do manequim dobra para trás no cotovelo
+    // e aparecia pelas costas da manga, perto da barra. Braço = dois troncos de cone
+    // (ombro → cotovelo → pulso); o tecido fica sempre por fora, com folga.
+    const armSegments: [Vector3, Vector3, number, number][] = [
+      [root, elbow, body.armRadius * 1.12, body.armRadius * 0.95],
+      [elbow, wrist, body.armRadius * 0.95, body.armRadius * 0.64],
+    ];
+    const clearance = 1;
+    const scratch = new Vector3();
+    const firstArmRow = Math.round(preRows / 2);
+    const original = grid.map((line) => line.map((p) => [...p]));
+    const pushOut = () => {
+    for (let row = firstArmRow; row <= total - hemRows; row++) {
+      for (let column = 0; column <= sleeveColumns; column++) {
+        const p = grid[row][column];
+        for (const [a, b, ra, rb] of armSegments) {
+          const ab = scratch.copy(b).sub(a);
+          const u = Math.max(0, Math.min(1, ((p[0] - a.x) * ab.x + (p[1] - a.y) * ab.y + (p[2] - a.z) * ab.z) / ab.lengthSq()));
+          const qx = a.x + ab.x * u;
+          const qy = a.y + ab.y * u;
+          const qz = a.z + ab.z * u;
+          const dx = p[0] - qx;
+          const dy = p[1] - qy;
+          const dz = p[2] - qz;
+          const d = Math.hypot(dx, dy, dz) || 1e-6;
+          const need = lerp(ra, rb, u) + clearance;
+          if (d < need) {
+            p[0] = qx + (dx / d) * need;
+            p[1] = qy + (dy / d) * need;
+            p[2] = qz + (dz / d) * need;
+          }
+        }
+      }
+    }
+    };
+    // Empurra e alisa em rodadas: o tecido contorna o braço sem dentes na barra.
+    for (let round = 0; round < 5; round++) {
+      pushOut();
+      for (let pass = 0; pass < 4; pass++) {
+        const prev = grid.map((line) => line.map((p) => [...p]));
+        for (let row = firstArmRow + 1; row < total - hemRows; row++) {
+          for (let column = 0; column <= sleeveColumns; column++) {
+            const left = prev[row][(column - 1 + sleeveColumns) % sleeveColumns];
+            const right = prev[row][(column + 1) % sleeveColumns];
+            for (let k = 0; k < 3; k++) {
+              grid[row][column][k] =
+                (prev[row - 1][column][k] + prev[row + 1][column][k] + left[k] + right[k] + 4 * prev[row][column][k]) / 8;
+            }
+          }
+        }
+        for (let row = firstArmRow + 1; row < total - hemRows; row++) grid[row][sleeveColumns] = [...grid[row][0]];
+      }
+    }
+    pushOut();
+    // Ombro numa linha só: o topo da manga continua o ombro do tronco (sem prateleira
+    // na costura nem vão escuro onde o tronco termina).
+    for (let row = 0; row < total - hemRows; row++) for (const p of grid[row]) fitShoulder(p);
+    for (let pass = 0; pass < 3; pass++) {
+      const prev = grid.map((line) => line.map((p) => [...p]));
+      for (let row = 1; row < Math.min(total - hemRows, preRows + 24); row++) {
+        for (let column = 0; column <= sleeveColumns; column++) {
+          grid[row][column][1] = (prev[row - 1][column][1] + 2 * prev[row][column][1] + prev[row + 1][column][1]) / 4;
+        }
+      }
+      for (let row = 0; row < total - hemRows; row++) for (const p of grid[row]) fitShoulder(p);
+    }
+    // A dobra da barra acompanha a última fileira da manga (sem dentes).
+    const hemBase = total - hemRows;
+    for (let row = hemBase + 1; row <= total; row++) {
+      for (let column = 0; column <= sleeveColumns; column++) {
+        for (let k = 0; k < 3; k++) grid[row][column][k] = grid[hemBase][column][k] + (original[row][column][k] - original[hemBase][column][k]);
       }
     }
     const geometry = buildGrid({
